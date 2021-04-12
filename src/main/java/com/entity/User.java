@@ -21,17 +21,6 @@ public class User {
     @Column(length = 200)
     private String  fullName;
 
-    @Column(length = 200)
-    private String  district;
-
-    @Column(length = 500)
-    private String  userName;
-
-    @Column(length = 4096)
-    private String  status;
-
-    @Column(length = 30)
-    private String iin;
     @Column(length = 4096)
     private String email;
 

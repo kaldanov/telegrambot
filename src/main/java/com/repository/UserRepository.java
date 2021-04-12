@@ -8,16 +8,8 @@ import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
-//    User            findByChatId(long chatId);
-    List<User>      findAllByChatIdOrderById(long chatId);
-    List<User>      findAllByEmailOrderById(String email);
-    int             countByChatId(long chatId);
-    User            findByIin(String iin);
-    User  findByPhone(String phone);
-    int             countByChatIdAndDistrict(long chatId, String district);
-    //User findByChatId(long chatId);
+    int countByChatId(long chatId);
 
-    void deleteByChatId(Long chatId);
-    User  findByChatId(long chatId);
+    User findByChatId(long chatId);
 
 }

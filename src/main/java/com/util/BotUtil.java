@@ -13,8 +13,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendContact;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -30,6 +32,21 @@ public class BotUtil {
 //    private KeyboardMarkUpService   keyboardMarkUpService;
 
     public BotUtil(DefaultAbsSender bot) { this.bot = bot; }
+
+    public void editMessageWithKeyboard(String text, long chatId, int messageId, InlineKeyboardMarkup replyKeyboard) throws TelegramApiException {
+        EditMessageText new_message = new EditMessageText()
+                .setChatId(chatId)
+                .setMessageId(messageId)
+                .setText(text)
+                .setReplyMarkup(replyKeyboard)
+                .setParseMode("html");
+        try {
+            bot.execute(new_message);
+        }
+        catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
     public  int  sendMessage(SendMessage sendMessage)  throws TelegramApiException {
         //System.out.println(sendMessage);
@@ -74,9 +91,6 @@ public class BotUtil {
         SendMessage sendMessage             = new SendMessage().setText(message.getName()).setChatId(chatId).setParseMode(ParseMode.html.name());
         KeyboardMarkUpService keyboardMarkUpService = new KeyboardMarkUpService();
 
-        if (message.getKeyboardId() != null){
-            sendMessage.setReplyMarkup(keyboardMarkUpService.select(message.getKeyboardId(), chatId).get());
-        }
 
         AtomicBoolean isCaption             = new AtomicBoolean(false);
         if (photo != null) {
@@ -119,6 +133,19 @@ public class BotUtil {
 
         return bot.execute(sendPhoto).getMessageId();
 
+    }
+
+    public void editMessage(String text, long chatId, int messageId) throws TelegramApiException {
+        EditMessageText new_message = new EditMessageText()
+                .setChatId(chatId)
+                .setMessageId(messageId)
+                .setText(text);
+        try {
+            bot.execute(new_message);
+        }
+        catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     public  int         sendContact(long chatId, Contact contact)                                                       throws TelegramApiException { return bot.execute(new SendContact().setChatId(chatId).setFirstName(contact.getFirstName()).setLastName(contact.getLastName()).setPhoneNumber(contact.getPhoneNumber())).getMessageId(); }

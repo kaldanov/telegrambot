@@ -60,7 +60,7 @@ public class CommandService {
         return button.map(Button::getCommandId).map(integer -> {
             return Optional.ofNullable(CommandFactory.getCommand(integer)).map(command -> {
                 command.setId(integer);
-                command.setMessageId(button.map(Button::getMessageId).orElse(0));
+//                command.setMessageId(button.map(Button::getMessageId).orElse(0));
                 return command;
             });
         }).orElseThrow(() -> new CommandNotFoundException("No data is available"));

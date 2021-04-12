@@ -20,21 +20,9 @@ public class Message {
     @Column(length = 8096)
     private String  name;
 
-    @Column(length = 8096)
-    private String  photo;
 
-    private Integer keyboardId;
-
-    @Column(length = 8096)
-    private String  file;
-
-    @Column(length = 100)
-    private String  typeFile;
 
     private int     langId;
 
-    public void setFile(String file, FileType fileType) {
-        this.file       = file;
-        this.typeFile   = fileType.name();
-    }
+
 }
