@@ -54,7 +54,7 @@ public class Conversation {
                 SetDeleteMessages.deleteMessage(chatId, bot);
                 ReplyKeyboard replyKeyboard = keyboardMarkUpService.select(1, chatId)
                         .orElseThrow(() -> new TelegramApiException("keyboard id" + 1 + "not found"));
-                bot.execute(new SendMessage().setChatId(chatId).setText(messageRepository.findByIdAndLangId(2, getLanguage().getId()).getName()).setReplyMarkup(replyKeyboard));
+                bot.execute(new SendMessage().setChatId(chatId).setText(messageRepository.findByIdAndLangId(1, getLanguage().getId()).getName()).setReplyMarkup(replyKeyboard));
             }
         }
         if (command != null) {

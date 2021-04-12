@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
@@ -46,6 +47,7 @@ public abstract class Command {
     protected int updateMessageId;
     protected String editableTextOfMessage;
     protected String updateMessagePhoto;
+    protected String updateMessageFile;
     protected String updateMessagePhone;
     protected int lastSendMessageID;
 
@@ -58,43 +60,12 @@ public abstract class Command {
     protected boolean isExitFromBot;
     protected MessageRepository messageRepository = TelegramBotRepositoryProvider.getMessageRepository();
     protected ButtonRepository buttonRepository = TelegramBotRepositoryProvider.getButtonRepository();
+    protected OnayRepository onayRepository = TelegramBotRepositoryProvider.getOnayRepository();
     protected UserRepository userRepository = TelegramBotRepositoryProvider.getUserRepository();
-    protected RecipientRepository recipientRepository = TelegramBotRepositoryProvider.getRecipientRepository();
-    protected OperatorRepository operatorRepository = TelegramBotRepositoryProvider.getOperatorRepository();
-    protected SuggestionRepository suggestionRepository = TelegramBotRepositoryProvider.getSuggestionRepository();
     protected LanguageUserRepository languageUserRepository = TelegramBotRepositoryProvider.getLanguageUserRepository();
-    protected AdminRepository adminRepository          = TelegramBotRepositoryProvider.getAdminRepository();
     protected KeyboardRepository keyboardRepository    = TelegramBotRepositoryProvider.getKeyboardRepository();
-    protected ServiceQuestionRepository serviceQuestionRepository = TelegramBotRepositoryProvider.getServiceQuestionRepository();
-    protected QuestMessageRepository questMessageRepository = TelegramBotRepositoryProvider.getQuestMessageRepository();
-    protected ServiceSurveyAnswerRepository serviceSurveyAnswerRepository = TelegramBotRepositoryProvider.getServiceSurveyAnswerRepository();
-//    protected CoursesTypeRepository coursesTypeRepository = TelegramBotRepositoryProvider.getCoursesTypeRepository();
-    protected EventRepository eventRepository = TelegramBotRepositoryProvider.getEventRepository();
-    protected SurveyAnswerRepository surveyAnswerRepository = TelegramBotRepositoryProvider.getSurveyAnswerRepository();
-    protected QuestionRepository questionRepository = TelegramBotRepositoryProvider.getQuestionRepository();
-    protected GroupRepository groupRepository = TelegramBotRepositoryProvider.getGroupRepository();
     protected PropertiesRepository propertiesRepository = TelegramBotRepositoryProvider.getPropertiesRepository();
-    protected CategoryGroupRepository categoryGroupRepository = TelegramBotRepositoryProvider.getCategoryGroupRepository();
-    protected CategoryRepository categoryRepository = TelegramBotRepositoryProvider.getCategoryRepository();
-    protected SpecialistRepository specialistRepository = TelegramBotRepositoryProvider.getSpecialistRepository();
-    protected KpiRepository kpiRepository = TelegramBotRepositoryProvider.getKpiRepository();
-    protected ReminderTaskRepository reminderTaskRepository = TelegramBotRepositoryProvider.getReminderTaskRepository();
-    protected ComplaintRepository complaintRepository = TelegramBotRepositoryProvider.getComplaintRepository();
-    protected CountHandlingPlanRepository countHandlingPlanRepository = TelegramBotRepositoryProvider.getCountHandlingPlanRepository();
-    protected ConsultationRepository consultationRepository = TelegramBotRepositoryProvider.getConsultationRepository();
-    protected RegistrationEventRepository registrationEventRepository = TelegramBotRepositoryProvider.getRegistrationEventRepository();
-
-
-    protected CategoriesIndicatorRepository categoriesIndicatorRepository = TelegramBotRepositoryProvider.getCategoriesIndicatorRepository();
-    protected ServiceRepository serviceRepository = TelegramBotRepositoryProvider.getServiceRepository();
-    protected ServicesSpecsRepository servicesSpecsRepository = TelegramBotRepositoryProvider.getServicesSpecsRepository();
-    protected RegistrationServiceRepository registrationServiceRepository = TelegramBotRepositoryProvider.getRegistrationServiceRepository();
-    protected ComesCourseRepository comesCourseRepository = TelegramBotRepositoryProvider.getComesCourseRepository();
-    protected DirectionRepository directionRepository = TelegramBotRepositoryProvider.getDirectionRepository();
-    protected DirectionRegistrationRepository directionRegistrationRepository = TelegramBotRepositoryProvider.getDirectionRegistrationRepository();
-    protected ReportServiceRepository reportServiceRepository = TelegramBotRepositoryProvider.getReportServiceRepository();
-    protected UpravlenieRepository upravlenieRepository = TelegramBotRepositoryProvider.getUpravlenieRepository();
-
+    protected SpecialityRepository specialityRepository = TelegramBotRepositoryProvider.getSpecialityRepository();
 
     public abstract boolean execute() throws TelegramApiException;
 
@@ -102,12 +73,30 @@ public abstract class Command {
         return sendMessageWithKeyboard(getText(messageId)  , keyboard);
     }
 
+    protected void editMessage(String text, long chatId, int messageId) throws TelegramApiException {
+        botUtils.editMessage(text, chatId, messageId);
+    }
+    protected void editMessage(String text, int messageId) throws TelegramApiException {
+        botUtils.editMessage(text, chatId, messageId);
+    }
+
+    protected void editMessageWithKeyboard(String text, int messageId, InlineKeyboardMarkup inlineKeyboardMarkup) throws TelegramApiException {
+        botUtils.editMessageWithKeyboard(text, chatId, messageId, inlineKeyboardMarkup);
+    }
+    protected void editMessageWithKeyboard(String text,long chatId, int messageId, InlineKeyboardMarkup inlineKeyboardMarkup) throws TelegramApiException {
+        botUtils.editMessageWithKeyboard(text, chatId, messageId, inlineKeyboardMarkup);
+    }
+
+    protected void editMessageWithKeyboard(String text,long chatId, int messageId, int keyboardId) throws TelegramApiException {
+        botUtils.editMessageWithKeyboard(text, chatId, messageId, keyboardMarkUpService.getInlineKeyboardMarkup(keyboardId, chatId));
+    }
+
+    protected void editMessageWithKeyboard(String text, int messageId, int keyboardId) throws TelegramApiException {
+        botUtils.editMessageWithKeyboard(text, chatId, messageId, keyboardMarkUpService.getInlineKeyboardMarkup(keyboardId, chatId));
+    }
+
     protected int sendMessageWithKeyboard(String text, int keyboardId) throws TelegramApiException,NullPointerException {
 
-        Optional<String> btn = Optional.of("");
-        if (keyboardId == 5){
-             btn = keyboardRepository.findById((Integer) keyboardId).map(Keyboard::getButtonIds);
-        }
         ReplyKeyboard replyKeyboard = keyboardMarkUpService.select(keyboardId ,chatId)
                 .orElseThrow(() -> new TelegramApiException("keyboard id" + keyboardId + "not found"));
 
@@ -261,50 +250,30 @@ public abstract class Command {
             } else {
                 updateMessagePhoto = null;
             }
+            if(updateMessage.hasDocument()){
+                updateMessageFile = update.getMessage().getDocument().getFileId();
+            }
         }
         if (hasContact()) updateMessagePhone = update.getMessage().getContact().getPhoneNumber();
 
         return false;
     }
 
-    protected boolean isRecipient() {
-        return recipientRepository.countByChatId(chatId) > 0;
-    }
-
-    protected boolean isIinRecipient(String iin) {
-        if(recipientRepository.countByIin(iin) > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-
-    }
 
     protected boolean isRegistered() {
         //System.out.println(userRepository.countByChatId(chatId));
         return userRepository.countByChatId(chatId) >= 0 && userRepository.countByChatId(chatId) != 0;
     }
 
-    protected boolean isAdmin(){
-        return adminRepository.findByUserId(chatId) != null;
-    }
+//    protected boolean isAdmin(){
+//        return adminRepository.findByUserId(chatId) != null;
+//    }
 
-    protected boolean isUpravlenie(){
-        return upravlenieRepository.findByChatId(chatId) != null;
-    }
+
     protected boolean isUser(){
         return userRepository.countByChatId(chatId) > 0;
     }
 
-    protected boolean isOper() {
-        return operatorRepository.countByUserId(chatId) > 0;
-    }
-
-
-    protected boolean isMainAdmin() {
-        return adminRepository.findByUserId(chatId) != null;
-    }
 
     protected boolean hasContact() {
         return update.hasMessage() && update.getMessage().getContact() != null;

@@ -47,6 +47,9 @@ public class CommandFactory {
     private static void  init() {
         mapCommand = new HashMap<>();
         addCommand(id001_Start.class);
+        addCommand(id004_RequestOnay.class);
+        addCommand(id003_Diplom.class);
+        addCommand(id002_RequestDorms.class);
         printListCommand();
     }
 

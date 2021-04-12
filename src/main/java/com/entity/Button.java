@@ -14,17 +14,11 @@ public class Button {
     @Column(unique = false)
     private long     id;
 
-    @Column(length = 300)
+    @Column(length = 4096)
     private String  name;
 
-    @Column(columnDefinition = "int default 0")
+    @Column
     private Integer commandId;
-
-    @Column(length = 4096)
-    private String  url;
-
-    private boolean requestContact;
-
 
     private int     langId;
 
