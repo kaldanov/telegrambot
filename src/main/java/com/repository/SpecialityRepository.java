@@ -13,6 +13,7 @@ import java.util.List;
 public interface SpecialityRepository extends JpaRepository<Speciality, Long> {
 
    List<Speciality> findAllByLangIdAndTypeOrderById(int langId, int type);
+   Speciality findAllByIdAndLangIdAndAndType(int id ,int langId, int type);
    List<Speciality> findAllByLangIdAndTypeAndSchoolType(int langId, int type, int schoolType);
 }
 

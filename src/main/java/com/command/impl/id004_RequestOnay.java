@@ -25,37 +25,37 @@ public class id004_RequestOnay extends Command {
     private OnayReportService onayReportService = new OnayReportService();
 
 
-
     @Override
     public boolean execute() throws TelegramApiException {
         user = userRepository.findByChatId(chatId);
         if (!isRegistered()) {
+            deleteAllMessage();
             sendMessageWithKeyboard(getText(7), 4);
             return EXIT;
         }
         switch (waitingType) {
             case START:
                 deleteAllMessage();
-                deleteId = sendMessageWithKeyboard(getText(18), 8);
-                editId = sendMessageWithKeyboard(getText(8), 5);
+                editId = sendMessageWithKeyboard(getText(18), 8);
+                deleteId = sendMessageWithKeyboard(getText(8), 5);
                 waitingType = WaitingType.YES_OR_NO;
                 return COMEBACK;
             case YES_OR_NO:
                 onay = new Onay();
-                if (isButton(9)) {
-                    oldDeleteId = deleteId;
-                    deleteMessage(editId);
-                    deleteId = sendMessageWithKeyboard(getText(18), 7);
+                if (isButton(9)) {   //  получал
+                    oldDeleteId = editId;
+                    deleteAllMessage();
+                    editId = sendMessageWithKeyboard(getText(18), 7);
                     deleteAllMessageWithoutKeyboard();
-                    editId = sendMessageWithKeyboard(getText(9), 6);
+                    deleteId = sendMessageWithKeyboard(getText(9), 6);
                     waitingType = WaitingType.SELECT_EDUCATION;
-                } else if (isButton(10)) {
+                } else if (isButton(10)) {  // не получал
                     onay.setGotOnay("Не получал");
-                    oldDeleteId = deleteId;
-                    deleteMessage(editId);
-                    deleteId = sendMessageWithKeyboard(getText(18), 7);
+                    oldDeleteId = editId;
+                    deleteAllMessage();
+                    editId = sendMessageWithKeyboard(getText(18), 7);
                     deleteAllMessageWithoutKeyboard();
-                    editId = sendMessage(getText(10));
+                    deleteId = sendMessage(getText(10));
                     waitingType = WaitingType.SET_CARD_ID;
                 } else if (isButton(11)) {
                     cancel();
@@ -67,18 +67,20 @@ public class id004_RequestOnay extends Command {
             case SELECT_EDUCATION:
                 if (isButton(12)) {
                     onay.setGotOnay("Колледж/ВУЗ");
-                    editMessage(getText(10), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(10));
                     waitingType = WaitingType.SET_CARD_ID;
                 } else if (isButton(13)) {
                     onay.setGotOnay("Школа");
-                    editMessage(getText(10), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(10));
                     waitingType = WaitingType.SET_CARD_ID;
                 } else if (isButton(14)) {
-                    oldDeleteId = deleteId;
-                    deleteId = sendMessageWithKeyboard(getText(18), 8);
-                    deleteMessage(editId);
-                    editId = sendMessageWithKeyboard(getText(8), 5);
+                    oldDeleteId = editId;
+                    editId = sendMessageWithKeyboard(getText(18), 8);
+                    deleteAllMessage();
                     deleteAllMessageWithoutKeyboard();
+                    deleteId = sendMessageWithKeyboard(getText(8), 5);
                     waitingType = WaitingType.YES_OR_NO;
                 } else if (isButton(11)) {
                     cancel();
@@ -90,11 +92,10 @@ public class id004_RequestOnay extends Command {
             case SET_CARD_ID:
                 if (isButton(14)) {
                     deleteAllMessage();
-                    oldDeleteId = deleteId;
-                    deleteId = sendMessageWithKeyboard(getText(18), 8);
-                    deleteMessage(editId);
-                    editId = sendMessageWithKeyboard(getText(8), 5);
+                    oldDeleteId = editId;
+                    editId = sendMessageWithKeyboard(getText(18), 8);
                     deleteAllMessageWithoutKeyboard();
+                    deleteId = sendMessageWithKeyboard(getText(8), 5);
                     waitingType = WaitingType.YES_OR_NO;
                 } else if (isButton(11)) {
                     cancel();
@@ -105,9 +106,9 @@ public class id004_RequestOnay extends Command {
                     } else if (isDigit(updateMessageText)) {
                         sendWrongData();
                     } else {
-                        deleteMessage(updateMessageId);
+                        deleteAllMessage();
                         onay.setCardId(updateMessageText);
-                        editMessage(getText(19), editId);
+                        deleteId = sendMessage(getText(19));
                         waitingType = WaitingType.SET_IIN;
                     }
                 } else {
@@ -116,8 +117,8 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case SET_IIN:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(10), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(10));
                     waitingType = WaitingType.SET_CARD_ID;
                 } else if (isButton(11)) {
                     cancel();
@@ -128,9 +129,9 @@ public class id004_RequestOnay extends Command {
                     } else if (isDigit(updateMessageText)) {
                         sendWrongData();
                     } else {
-                        deleteMessage(updateMessageId);
+                        deleteAllMessage();
                         onay.setIin(updateMessageText);
-                        editMessage(getText(11), editId);
+                        deleteId = sendMessage(getText(11));
                         waitingType = WaitingType.DATE_ISSUE;
                     }
                 } else {
@@ -139,17 +140,17 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case DATE_ISSUE:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(10), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(10));
                     waitingType = WaitingType.SET_CARD_ID;
                 } else if (isButton(11)) {
                     cancel();
                     return EXIT;
                 } else if (hasMessageText()) {
                     try {
-                        deleteMessage(updateMessageId);
+                        deleteAllMessage();
                         onay.setDateIssue(new SimpleDateFormat("dd.MM.yyyy").parse(updateMessageText));
-                        editMessage(getText(12), editId);
+                        deleteId = sendMessage(getText(12));
                         waitingType = WaitingType.DATE_END;
                     } catch (ParseException e) {
                         sendWrongData();
@@ -160,8 +161,8 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case DATE_END:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(11), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(11));
                     waitingType = WaitingType.DATE_ISSUE;
                 } else if (isButton(11)) {
                     cancel();
@@ -169,9 +170,9 @@ public class id004_RequestOnay extends Command {
                 } else if (hasMessageText()) {
                     Date date = null;
                     try {
-                        deleteMessage(updateMessageId);
+                        deleteAllMessage();
                         date = new SimpleDateFormat("dd.MM.yyyy").parse(updateMessageText);
-                        editMessage(getText(13), editId);
+                        deleteId = sendMessage(getText(13));
                         waitingType = WaitingType.ISSUED_BY;
                         onay.setDateEnd(date);
                     } catch (ParseException e) {
@@ -183,16 +184,16 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case ISSUED_BY:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(12), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(12));
                     waitingType = WaitingType.DATE_END;
                 } else if (isButton(11)) {
                     cancel();
                     return EXIT;
                 } else if (hasMessageText()) {
-                    deleteMessage(updateMessageId);
+                    deleteAllMessage();
                     onay.setIssuedBy(updateMessageText);
-                    editMessage(getText(14), editId);
+                    deleteId = sendMessage(getText(14));
                     waitingType = WaitingType.PHOTO_CARD;
                 } else {
                     sendWrongData();
@@ -200,21 +201,21 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case PHOTO_CARD:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(13), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(13));
                     waitingType = WaitingType.ISSUED_BY;
                 } else if (isButton(11)) {
                     cancel();
                     return EXIT;
                 } else if (hasPhoto()) {
-                    deleteMessage(updateMessageId);
+                    deleteAllMessage();
                     onay.setCardUrl(getUpdateMessagePhoto());
-                    editMessage(getText(15), editId);
+                    deleteId = sendMessage(getText(15));
                     waitingType = WaitingType.PHOTO;
                 } else if (hasDocument()) {
-                    deleteMessage(updateMessageId);
+                    deleteAllMessage();
                     onay.setCardUrl(getUpdateMessageFile());
-                    editMessage(getText(15), editId);
+                    deleteId = sendMessage(getText(15));
                     waitingType = WaitingType.PHOTO;
                 } else {
                     sendWrongData();
@@ -222,22 +223,23 @@ public class id004_RequestOnay extends Command {
                 return COMEBACK;
             case PHOTO:
                 if (isButton(14)) {
-                    deleteMessage(updateMessageId);
-                    editMessage(getText(14), editId);
+                    deleteAllMessage();
+                    deleteId = sendMessage(getText(14));
                     waitingType = WaitingType.PHOTO_CARD;
                 } else if (isButton(11)) {
                     cancel();
                     return EXIT;
                 } else if (hasPhoto()) {
-                    deleteMessage(updateMessageId);
+                    deleteAllMessage();
                     onay.setPhotoUrl(getUpdateMessagePhoto());
                     onay.setDate(new Date());
                     onay.setFullName(user.getFullName());
                     onay.setPhone(user.getPhone());
                     onayRepository.save(onay);
-                    deleteMessage(editId);
                     sendMessageWithKeyboard(String.format(getText(17), user.getFullName()), 2);
-                    onayReportService.sendOnayReport(chatId,bot);
+                    oldDeleteId = editId;
+                    deleteAllMessageWithoutKeyboard();
+                    onayReportService.sendOnayReport(chatId, bot);
                 } else {
                     sendWrongData();
                 }
@@ -256,9 +258,9 @@ public class id004_RequestOnay extends Command {
     }
 
     private void cancel() throws TelegramApiException {
-        deleteMessage(editId);
+        deleteAllMessage();
         deleteId = sendMessageWithKeyboard(getText(3), 2);
-        deleteAllMessageWithoutKeyboard();
+        deleteMessage(editId);
     }
 
     private void deleteAllMessageWithoutKeyboard() {

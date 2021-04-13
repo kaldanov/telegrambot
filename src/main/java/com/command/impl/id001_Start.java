@@ -20,10 +20,12 @@ public class id001_Start extends Command {
                 if (isButton(2)) {
                     LanguageService.setLanguage(chatId, Language.kz);
                     return registrationOption();
-                } else if (isButton(3)) {
+                }
+                else if (isButton(3)) {
                     LanguageService.setLanguage(chatId, Language.ru);
                     return registrationOption();
-                } else deleteId = sendMessageWithKeyboard(getText(1), 1);
+                }
+                else deleteId = sendMessageWithKeyboard(getText(1), 1);
                 return COMEBACK;
             case SET_FULL_NAME:
                 if (hasMessageText()) {

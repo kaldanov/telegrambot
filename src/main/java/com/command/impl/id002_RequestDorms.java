@@ -2,34 +2,39 @@ package com.command.impl;
 
 import com.command.Command;
 import com.entity.User;
+import com.entity.custom.Dorm;
 import com.entity.custom.Onay;
 import com.entity.custom.Speciality;
 import com.entity.enums.Language;
 import com.entity.enums.WaitingType;
 import com.service.OnayReportService;
 import com.util.ButtonsLeaf;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class id002_RequestDorms extends Command {
-    User user;
-    Onay onay;
+    private User user;
+    private Onay onay;
+    private Dorm dorm;
+    private List<String> socialGroupIds;
     private ButtonsLeaf buttonsLeaf;
     private List<Speciality> specialities;
+    private Map mapForMessage = new HashMap();
 
     private int deleteId;
     private int deleteIdWrong, deleteIdWithKeyboard;
     private int oldDeleteId;
-    private int prev;
 
 
     @Override
     public boolean execute() throws TelegramApiException {
+        mapForMessage.put("54", 42);
+        mapForMessage.put("55", 43);
+        mapForMessage.put("56", 44);
         user = userRepository.findByChatId(chatId);
         if (!isRegistered()) {
             sendMessageWithKeyboard(getText(7), 4);
@@ -37,6 +42,7 @@ public class id002_RequestDorms extends Command {
         }
         switch (waitingType) {
             case START:
+                dorm = new Dorm();
                 deleteAllMessage();
                 deleteIdWithKeyboard = sendMessageWithKeyboard(getText(18), 8);
                 deleteId = sendMessageWithKeyboard(getText(20), 10);
@@ -153,6 +159,8 @@ public class id002_RequestDorms extends Command {
                         deleteAllMessage();
                         deleteId = sendMessage(getText(24));
                         waitingType = WaitingType.SET_PHONE_PARENT;
+                    } else {
+                        sendWrongData();
                     }
                 } else {
                     sendWrongData();
@@ -242,7 +250,7 @@ public class id002_RequestDorms extends Command {
                     return EXIT;
                 } else if (hasCallbackQuery()) {
                     deleteAllMessage();
-                    prev = Integer.parseInt(updateMessageText);
+                    dorm.setEducationSchool(Integer.parseInt(updateMessageText));
                     buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(5, Integer.parseInt(updateMessageText)));  //  5 - Специальность
                     deleteId = sendMessageWithKeyboard(getText(30), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(5, Integer.parseInt(updateMessageText))));
                     waitingType = WaitingType.SELECT_SPECIALITY;
@@ -271,8 +279,8 @@ public class id002_RequestDorms extends Command {
             case SELECT_DORM:
                 if (isButton(14)) {
                     deleteAllMessage();
-                    buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(5, prev));  //  5 - Специальность
-                    deleteId = sendMessageWithKeyboard(getText(30), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(5, prev)));
+                    buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(5, dorm.getEducationSchool()));  //  5 - Специальность
+                    deleteId = sendMessageWithKeyboard(getText(30), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(5, dorm.getEducationSchool())));
                     waitingType = WaitingType.SELECT_SPECIALITY;
                 } else if (isButton(11)) {
                     cancel();
@@ -282,7 +290,7 @@ public class id002_RequestDorms extends Command {
                     int a = 32;
                     if (updateMessageText.equals("46"))
                         a = 33;
-                    prev = Integer.parseInt(updateMessageText);
+                    dorm.setTypeDorm(Integer.parseInt(updateMessageText));
                     buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(7, Integer.parseInt(updateMessageText)));  //  7 - Комната
                     deleteId = sendMessageWithKeyboard(getText(a), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(7, Integer.parseInt(updateMessageText))));
                     waitingType = WaitingType.SELECT_DORM_ROOM;
@@ -300,8 +308,12 @@ public class id002_RequestDorms extends Command {
                     cancel();
                     return EXIT;
                 } else if (hasCallbackQuery()) {
+                    socialGroupIds = new ArrayList<>();
+                    dorm.setSocialGroup("");
+                    dorm.setSocialGroupUrl("");
                     deleteAllMessage();
-                    deleteId = sendMessageWithKeyboard(getText(34),11);
+                    buttonsLeaf = new ButtonsLeaf(getSpecialityNames(8));
+                    deleteId = sendMessageWithKeyboard(getText(34), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIds(8)));
                     waitingType = WaitingType.SELECT_SOCIAL_GROUP;
                 } else {
                     sendWrongData();
@@ -309,17 +321,84 @@ public class id002_RequestDorms extends Command {
                 return COMEBACK;
             case SELECT_SOCIAL_GROUP:
                 if (isButton(14)) {
-//                    deleteAllMessage();
-//                    buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(7, Integer.parseInt(updateMessageText)));  //  7 - Комната
-//                    deleteId = sendMessageWithKeyboard(getText(a), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(7, Integer.parseInt(updateMessageText))));
-//                    waitingType = WaitingType.SELECT_DORM_ROOM;
+                    deleteAllMessage();
+                    int a = 32;
+                    if (dorm.getTypeDorm() == 46)
+                        a = 33;
+                    buttonsLeaf = new ButtonsLeaf(getSpecialityNamesBySchool(7, dorm.getTypeDorm()));  //  7 - Комната
+                    deleteId = sendMessageWithKeyboard(getText(a), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsBySchool(7, dorm.getTypeDorm())));
+                    waitingType = WaitingType.SELECT_DORM_ROOM;
                 } else if (isButton(11)) {
                     cancel();
                     return EXIT;
-                } else if (isButton(11)) {
+                } else if (hasCallbackQuery()) {
+                    if (specialityRepository.findAllByIdAndLangIdAndAndType(Integer.parseInt(updateMessageText), getLanguage().getId(), 8) == null)
+                        sendWrongData();
+                    else {
+                        if (updateMessageText.equals("59")) {
+                            deleteAllMessage();
+                            if (socialGroupIds == null) {
+                                deleteId = sendMessage(14);
+                                waitingType = WaitingType.SET_CARD_PHOTO;
+                                return COMEBACK;
+                            } else {
+                                return setAllUrlForSocialGroup();
+                            }
+                        } else {
+                            if (socialGroupIds.size() != 4) {
+                                socialGroupIds.add(updateMessageText);
+                                dorm.setSocialGroup(dorm.getSocialGroup() + updateMessageText + "\n");
+                                buttonsLeaf = new ButtonsLeaf(getSpecialityNamesByItselfId(8, socialGroupIds));
+                                editMessageWithKeyboard(getText(34), deleteId, (InlineKeyboardMarkup) buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIdsByItselfId(8, socialGroupIds)));
+                                waitingType = WaitingType.SELECT_SOCIAL_GROUP;
+
+                            } else {
+                                return setAllUrlForSocialGroup();
+                            }
+                        }
+                    }
+                } else {
+                    sendWrongData();
+                }
+                return COMEBACK;
+            case SET_URL:
+                if (isButton(14)) {
+                    socialGroupIds = new ArrayList<>();
+                    dorm.setSocialGroup("");
+                    dorm.setSocialGroupUrl("");
                     deleteAllMessage();
-                    deleteId = sendMessageWithKeyboard(getText(34),11);
-                    waitingType = WaitingType.SELECT_DORM;
+                    buttonsLeaf = new ButtonsLeaf(getSpecialityNames(8));
+                    deleteId = sendMessageWithKeyboard(getText(34), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIds(8)));
+                    waitingType = WaitingType.SELECT_SOCIAL_GROUP;
+                } else if (isButton(11)) {
+                    cancel();
+                    return EXIT;
+                } else if (hasDocument()) {
+                    deleteAllMessage();
+                    dorm.setSocialGroupUrl(dorm.getSocialGroupUrl() + updateMessageFile + "\n");
+                    socialGroupIds.remove(socialGroupIds.get(0));
+                    setAllUrlForSocialGroup();
+                } else {
+                    sendWrongData();
+                }
+                return COMEBACK;
+            case SET_CARD_PHOTO:
+                if (isButton(14)) {
+                    socialGroupIds = new ArrayList<>();
+                    dorm.setSocialGroup("");
+                    dorm.setSocialGroupUrl("");
+                    deleteAllMessage();
+                    buttonsLeaf = new ButtonsLeaf(getSpecialityNames(8));
+                    deleteId = sendMessageWithKeyboard(getText(34), buttonsLeaf.getListButtonWhereIdIsData(getSpecialityIds(8)));
+                    waitingType = WaitingType.SELECT_SOCIAL_GROUP;
+                } else if (isButton(11)) {
+                    cancel();
+                    return EXIT;
+                } else if (hasDocument()) {
+                    deleteAllMessage();
+                    dorm.setCardUrl(updateMessageFile);
+                    deleteAllMessage();
+                    sendMessageWithKeyboard(getText(52), 2);
                 } else {
                     sendWrongData();
                 }
@@ -327,6 +406,26 @@ public class id002_RequestDorms extends Command {
         }
 
         return EXIT;
+    }
+
+    private boolean setAllUrlForSocialGroup() throws TelegramApiException {
+        if (socialGroupIds.size() != 0) {
+            deleteAllMessage();
+            System.out.println(mapForMessage.get(socialGroupIds.get(0)));
+            if (mapForMessage.get(socialGroupIds.get(0)) != null) {
+                deleteId = sendMessage(getText((Integer) mapForMessage.get(socialGroupIds.get(0))));
+                waitingType = WaitingType.SET_URL;
+                return COMEBACK;
+            } else {
+                deleteId = sendMessage(14);
+                waitingType = WaitingType.SET_CARD_PHOTO;
+                return COMEBACK;
+            }
+        } else {
+            deleteId = sendMessage(14);
+            waitingType = WaitingType.SET_CARD_PHOTO;
+            return COMEBACK;
+        }
     }
 
     private List<String> getSpecialityIdsBySchool(int type, int schoolId) {
@@ -343,6 +442,26 @@ public class id002_RequestDorms extends Command {
         List<String> specialityNames = new ArrayList<>();
         for (Speciality speciality : specialities) {
             specialityNames.add(speciality.getName());
+        }
+        return specialityNames;
+    }
+
+    private List<String> getSpecialityIdsByItselfId(int type, List<String> ids) {
+        specialities = specialityRepository.findAllByLangIdAndTypeOrderById(getLanguage().getId(), type);
+        List<String> specialityIds = new ArrayList<>();
+        for (Speciality speciality : specialities) {
+            if (!ids.contains(String.valueOf(speciality.getId())))
+                specialityIds.add(String.valueOf(speciality.getId()));
+        }
+        return specialityIds;
+    }
+
+    private List<String> getSpecialityNamesByItselfId(int type, List<String> ids) {
+        specialities = specialityRepository.findAllByLangIdAndTypeOrderById(getLanguage().getId(), type);
+        List<String> specialityNames = new ArrayList<>();
+        for (Speciality speciality : specialities) {
+            if (!ids.contains(String.valueOf(speciality.getId())))
+                specialityNames.add(speciality.getName());
         }
         return specialityNames;
     }
